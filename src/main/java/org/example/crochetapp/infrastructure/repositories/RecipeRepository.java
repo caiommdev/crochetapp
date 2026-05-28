@@ -1,4 +1,4 @@
-package org.example.crochetapp.infrastructure.persistence;
+package org.example.crochetapp.infrastructure.repositories;
 
 import org.example.crochetapp.domain.model.Recipe;
 import org.springframework.data.jpa.repository.JpaRepository;
