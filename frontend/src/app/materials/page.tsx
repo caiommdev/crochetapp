@@ -40,6 +40,7 @@ const TYPE_LABELS: Record<MaterialType, string> = {
 type FormData = {
   name: string;
   type: MaterialType;
+  price: string;
   color: string;
   quantity: string;
   meters: string;
@@ -48,6 +49,7 @@ type FormData = {
 const EMPTY: FormData = {
   name: "",
   type: "YARN",
+  price: "",
   color: "",
   quantity: "",
   meters: "",
@@ -83,6 +85,7 @@ export default function MaterialsPage() {
     setForm({
       name: m.name,
       type: m.type,
+      price: String(m.price),
       color: m.color ?? "",
       quantity: m.quantity != null ? String(m.quantity) : "",
       meters: m.meters != null ? String(m.meters) : "",
@@ -95,6 +98,7 @@ export default function MaterialsPage() {
       const payload: Omit<Material, "id"> = {
         name: form.name,
         type: form.type,
+        price: Number(form.price),
         ...(form.type === "YARN" && {
           color: form.color || undefined,
           quantity: form.quantity ? Number(form.quantity) : undefined,
@@ -210,6 +214,18 @@ export default function MaterialsPage() {
                   setForm((f) => ({ ...f, name: e.target.value }))
                 }
                 placeholder="Nome do material"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label>Preço (R$)</Label>
+              <Input
+                type="number"
+                step="0.01"
+                value={form.price}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, price: e.target.value }))
+                }
+                placeholder="0,00"
               />
             </div>
             <div className="space-y-1">

@@ -39,4 +39,23 @@ public class Budget {
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 32)
     private BudgetStatus status;
+
+
+    public void confirm(){
+        if(this.status != BudgetStatus.IN_VALIDATION)
+            throw new IllegalStateException("Budget is already in validation.");
+        this.status = BudgetStatus.IN_PROGRESS;
+    }
+
+    public void cancel(){
+        if(this.status == BudgetStatus.CANCELED)
+            throw new IllegalStateException("Budget is already canceled.");
+        this.status = BudgetStatus.CANCELED;
+    }
+
+    public void complete(){
+        if(this.status != BudgetStatus.IN_PROGRESS)
+            throw new IllegalStateException("Budget is already completed.");
+        this.status = BudgetStatus.DONE;
+    }
 }

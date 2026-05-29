@@ -2,6 +2,7 @@ package org.example.crochetapp.controller.recipes;
 
 import lombok.RequiredArgsConstructor;
 import org.example.crochetapp.application.RecipeService;
+import org.example.crochetapp.application.dtos.SaveRecipeRequest;
 import org.example.crochetapp.domain.model.Recipe;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,13 +30,13 @@ public class RecipeController {
     }
 
     @PostMapping
-    public ResponseEntity<Recipe> create(@RequestBody Recipe recipe) {
-        return ResponseEntity.ok(recipeService.save(recipe));
+    public ResponseEntity<Recipe> create(@RequestBody SaveRecipeRequest request) {
+        return ResponseEntity.ok(recipeService.save(request));
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Recipe> update(@PathVariable UUID id, @RequestBody Recipe recipe) {
-        return recipeService.update(id, recipe)
+    public ResponseEntity<Recipe> update(@PathVariable UUID id, @RequestBody SaveRecipeRequest request) {
+        return recipeService.update(id, request)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

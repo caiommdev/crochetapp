@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { recipesApi } from "@/lib/api";
-import type { Recipe } from "@/types";
+import { materialsApi, recipesApi } from "@/lib/api";
+import type { Material, Recipe } from "@/types";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,6 +14,13 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Table,
   TableBody,
   TableCell,
@@ -24,12 +31,24 @@ import {
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
 type PointEntry = { key: string; value: string };
-type FormData = { name: string; description: string; points: PointEntry[] };
+type MaterialReqEntry = { materialId: string; quantityNeeded: string };
+type FormData = {
+  name: string;
+  description: string;
+  points: PointEntry[];
+  materialRequirements: MaterialReqEntry[];
+};
 
-const EMPTY: FormData = { name: "", description: "", points: [] };
+const EMPTY: FormData = {
+  name: "",
+  description: "",
+  points: [],
+  materialRequirements: [],
+};
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [materials, setMaterials] = useState<Material[]>([]);
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Recipe | null>(null);
   const [form, setForm] = useState<FormData>(EMPTY);
@@ -37,9 +56,11 @@ export default function RecipesPage() {
 
   async function load() {
     try {
-      setRecipes(await recipesApi.list());
+      const [r, m] = await Promise.all([recipesApi.list(), materialsApi.list()]);
+      setRecipes(r);
+      setMaterials(m);
     } catch {
-      setError("Erro ao carregar receitas.");
+      setError("Erro ao carregar dados.");
     }
   }
 
@@ -58,25 +79,32 @@ export default function RecipesPage() {
     setForm({
       name: r.name,
       description: r.description ?? "",
-      points: Object.entries(r.points).map(([key, value]) => ({
-        key,
-        value: String(value),
+      points: r.points.map((p) => ({
+        key: p.name,
+        value: String(p.centimetersPerPoint),
+      })),
+      materialRequirements: r.materialRequirements.map((req) => ({
+        materialId: String(req.material.id),
+        quantityNeeded: String(req.quantityNeeded),
       })),
     });
     setOpen(true);
   }
 
   async function handleSubmit() {
-        console.log("TESTE");
     try {
       const payload = {
         name: form.name,
         description: form.description || undefined,
-        points: Object.fromEntries(
-          form.points
-            .filter((p) => p.key.trim())
-            .map((p) => [p.key, Number(p.value)])
-        ),
+        points: form.points
+          .filter((p) => p.key.trim())
+          .map((p) => ({ name: p.key, centimetersPerPoint: Number(p.value) })),
+        materialRequirements: form.materialRequirements
+          .filter((r) => r.materialId)
+          .map((r) => ({
+            materialId: r.materialId,
+            quantityNeeded: Number(r.quantityNeeded) || 1,
+          })),
       };
       if (editing) {
         await recipesApi.update(editing.id, payload);
@@ -116,6 +144,35 @@ export default function RecipesPage() {
     setForm((f) => ({ ...f, points: f.points.filter((_, idx) => idx !== i) }));
   }
 
+  function addRequirement() {
+    setForm((f) => ({
+      ...f,
+      materialRequirements: [
+        ...f.materialRequirements,
+        { materialId: "", quantityNeeded: "1" },
+      ],
+    }));
+  }
+
+  function updateRequirement(
+    i: number,
+    field: "materialId" | "quantityNeeded",
+    val: string
+  ) {
+    setForm((f) => {
+      const reqs = [...f.materialRequirements];
+      reqs[i] = { ...reqs[i], [field]: val };
+      return { ...f, materialRequirements: reqs };
+    });
+  }
+
+  function removeRequirement(i: number) {
+    setForm((f) => ({
+      ...f,
+      materialRequirements: f.materialRequirements.filter((_, idx) => idx !== i),
+    }));
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
@@ -125,9 +182,7 @@ export default function RecipesPage() {
         </Button>
       </div>
 
-      {error && (
-        <p className="text-red-500 text-sm mb-4">{error}</p>
-      )}
+      {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
 
       <Table>
         <TableHeader>
@@ -135,13 +190,14 @@ export default function RecipesPage() {
             <TableHead>Nome</TableHead>
             <TableHead>Descrição</TableHead>
             <TableHead>Pontos</TableHead>
+            <TableHead>Materiais</TableHead>
             <TableHead className="text-right">Ações</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
           {recipes.length === 0 && (
             <TableRow>
-              <TableCell colSpan={4} className="text-center text-zinc-400 py-8">
+              <TableCell colSpan={5} className="text-center text-zinc-400 py-8">
                 Nenhuma receita cadastrada.
               </TableCell>
             </TableRow>
@@ -152,7 +208,8 @@ export default function RecipesPage() {
               <TableCell className="text-zinc-500 max-w-xs truncate">
                 {r.description ?? "—"}
               </TableCell>
-              <TableCell>{Object.keys(r.points).length} ponto(s)</TableCell>
+              <TableCell>{r.points.length} ponto(s)</TableCell>
+              <TableCell>{r.materialRequirements.length} material(is)</TableCell>
               <TableCell className="text-right space-x-1">
                 <Button size="icon" variant="ghost" onClick={() => openEdit(r)}>
                   <Pencil className="h-4 w-4" />
@@ -171,7 +228,7 @@ export default function RecipesPage() {
       </Table>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
               {editing ? "Editar Receita" : "Nova Receita"}
@@ -198,11 +255,12 @@ export default function RecipesPage() {
                 placeholder="Descrição opcional"
               />
             </div>
+
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Pontos</Label>
+                <Label>Pontos (tipo de ponto → cm/ponto)</Label>
                 <Button size="sm" variant="outline" onClick={addPoint}>
-                  <Plus className="h-3 w-3 mr-1" /> Adicionar ponto
+                  <Plus className="h-3 w-3 mr-1" /> Adicionar
                 </Button>
               </div>
               {form.points.map((p, i) => (
@@ -213,7 +271,7 @@ export default function RecipesPage() {
                     onChange={(e) => updatePoint(i, "key", e.target.value)}
                   />
                   <Input
-                    placeholder="Qtd"
+                    placeholder="cm"
                     type="number"
                     value={p.value}
                     onChange={(e) => updatePoint(i, "value", e.target.value)}
@@ -228,6 +286,55 @@ export default function RecipesPage() {
                   </Button>
                 </div>
               ))}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Materiais necessários</Label>
+                <Button size="sm" variant="outline" onClick={addRequirement}>
+                  <Plus className="h-3 w-3 mr-1" /> Adicionar
+                </Button>
+              </div>
+              {form.materialRequirements.map((req, i) => (
+                <div key={i} className="flex gap-2 items-center">
+                  <Select
+                    value={req.materialId}
+                    onValueChange={(v) => updateRequirement(i, "materialId", v)}
+                  >
+                    <SelectTrigger className="flex-1">
+                      <SelectValue placeholder="Selecione o material" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {materials.map((m) => (
+                        <SelectItem key={m.id} value={String(m.id)}>
+                          {m.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Input
+                    placeholder="Qtd"
+                    type="number"
+                    value={req.quantityNeeded}
+                    onChange={(e) =>
+                      updateRequirement(i, "quantityNeeded", e.target.value)
+                    }
+                    className="w-24"
+                  />
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => removeRequirement(i)}
+                  >
+                    <Trash2 className="h-4 w-4 text-red-500" />
+                  </Button>
+                </div>
+              ))}
+              {form.materialRequirements.length === 0 && (
+                <p className="text-sm text-zinc-400">
+                  Nenhum material adicionado. Os materiais definem o custo do orçamento.
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>

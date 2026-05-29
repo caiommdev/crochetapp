@@ -3,9 +3,12 @@ package org.example.crochetapp.domain.model;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.List;
 import java.util.UUID;
 
+import org.example.crochetapp.domain.model.material.Material;
 import org.example.crochetapp.domain.model.valueobjects.Image;
+import org.example.crochetapp.domain.model.valueobjects.RecipeMaterialRequirement;
 
 @Getter
 @Setter
@@ -30,4 +33,10 @@ public class Product {
 
     @Embedded
     private Image image;
+
+    public List<Material> getRequiredMaterials() {
+        return recipe.getMaterialRequirements().stream()
+                .map(RecipeMaterialRequirement::getMaterial)
+                .toList();
+    }
 }

@@ -2,6 +2,8 @@ package org.example.crochetapp.controller.budgets;
 
 import lombok.RequiredArgsConstructor;
 import org.example.crochetapp.application.BudgetService;
+import org.example.crochetapp.application.dtos.BudgetQuote;
+import org.example.crochetapp.application.dtos.CreateQuoteRequest;
 import org.example.crochetapp.domain.model.Budget;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +45,23 @@ public class BudgetController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         budgetService.deleteById(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/quote")
+    public ResponseEntity<BudgetQuote> createQuote(@RequestBody CreateQuoteRequest request) {
+        return ResponseEntity.ok(budgetService.createQuote(request.productId(), request.materialIds()));
+    }
+
+    @PostMapping("/{id}/accept")
+    public ResponseEntity<Void> accept(@PathVariable UUID id) {
+        budgetService.acceptBudget(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/{id}/cancel")
+    public ResponseEntity<Void> cancel(@PathVariable UUID id) {
+        budgetService.cancelBudget(id);
         return ResponseEntity.noContent().build();
     }
 }

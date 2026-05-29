@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -18,7 +19,7 @@ public class MaterialService {
         return materialRepository.findAll();
     }
 
-    public Optional<Material> findById(Long id) {
+    public Optional<Material> findById(UUID id) {
         return materialRepository.findById(id);
     }
 
@@ -26,7 +27,7 @@ public class MaterialService {
         return materialRepository.save(material);
     }
 
-    public Optional<Material> update(Long id, Material updated) {
+    public Optional<Material> update(UUID id, Material updated) {
         return materialRepository.findById(id).map(existing -> {
             existing.setName(updated.getName());
             existing.setImage(updated.getImage());
@@ -34,7 +35,7 @@ public class MaterialService {
         });
     }
 
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         materialRepository.deleteById(id);
     }
 }

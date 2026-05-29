@@ -3,11 +3,22 @@ export interface Image {
   altText?: string;
 }
 
+export interface Point {
+  name: string;
+  centimetersPerPoint: number;
+}
+
+export interface RecipeMaterialRequirement {
+  material: Material;
+  quantityNeeded: number;
+}
+
 export interface Recipe {
   id: string;
   name: string;
   description?: string;
-  points: Record<string, number>;
+  points: Point[];
+  materialRequirements: RecipeMaterialRequirement[];
   image?: Image;
 }
 
@@ -17,6 +28,7 @@ export interface Material {
   id: number;
   name: string;
   type: MaterialType;
+  price: number;
   image?: Image;
   // Yarn
   color?: string;
@@ -39,4 +51,18 @@ export interface Budget {
   product: Product;
   materials: Material[];
   status: BudgetStatus;
+}
+
+export interface ProfitRange {
+  label: string;
+  cost: number;
+  minPrice: number;
+  maxPrice: number;
+  minProfit: number;
+  maxProfit: number;
+}
+
+export interface BudgetQuote {
+  budget: Budget;
+  profitRanges: ProfitRange[];
 }

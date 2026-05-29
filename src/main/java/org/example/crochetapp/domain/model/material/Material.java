@@ -4,6 +4,10 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.math.BigDecimal;
+import java.util.UUID;
+
 import org.example.crochetapp.domain.model.valueobjects.Image;
 
 @Getter
@@ -23,12 +27,15 @@ import org.example.crochetapp.domain.model.valueobjects.Image;
 public abstract class Material {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.AUTO)
     @Column(name = "id", updatable = false, nullable = false)
-    private Long id;
+    private UUID id;
 
     @Column(name = "name", nullable = false)
     private String name;
+
+    @Column(name = "price", nullable = false)
+    private BigDecimal price;
 
     @Embedded
     private Image image;
