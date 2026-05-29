@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/materials")
@@ -21,7 +22,7 @@ public class MaterialController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Material> findById(@PathVariable Long id) {
+    public ResponseEntity<Material> findById(@PathVariable UUID id) {
         return materialService.findById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
@@ -33,14 +34,14 @@ public class MaterialController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Material> update(@PathVariable Long id, @RequestBody Material material) {
+    public ResponseEntity<Material> update(@PathVariable UUID id, @RequestBody Material material) {
         return materialService.update(id, material)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
+    public ResponseEntity<Void> delete(@PathVariable UUID id) {
         materialService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
