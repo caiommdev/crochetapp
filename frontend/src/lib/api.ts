@@ -21,9 +21,9 @@ async function req<T>(path: string, init?: RequestInit): Promise<T> {
 
 export const recipesApi = {
   list: () => req<Recipe[]>("/api/recipes"),
-  create: (data: Omit<Recipe, "id" | "materialRequirements"> & { points: { name: string; centimetersPerPoint: number }[]; materialRequirements: { materialId: string; quantityNeeded: number }[] }) =>
+  create: (data: Omit<Recipe, "id" | "materialRequirements"> & { points: { name: string; centimetersPerPoint: number; quantity: number }[]; materialRequirements: { materialId: string; quantityNeeded: number }[] }) =>
     req<Recipe>("/api/recipes", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: string, data: Omit<Recipe, "id" | "materialRequirements"> & { points: { name: string; centimetersPerPoint: number }[]; materialRequirements: { materialId: string; quantityNeeded: number }[] }) =>
+  update: (id: string, data: Omit<Recipe, "id" | "materialRequirements"> & { points: { name: string; centimetersPerPoint: number; quantity: number }[]; materialRequirements: { materialId: string; quantityNeeded: number }[] }) =>
     req<Recipe>(`/api/recipes/${id}`, { method: "PUT", body: JSON.stringify(data) }),
   remove: (id: string) =>
     req<void>(`/api/recipes/${id}`, { method: "DELETE" }),
@@ -33,9 +33,9 @@ export const materialsApi = {
   list: () => req<Material[]>("/api/materials"),
   create: (data: Omit<Material, "id">) =>
     req<Material>("/api/materials", { method: "POST", body: JSON.stringify(data) }),
-  update: (id: number, data: Omit<Material, "id">) =>
+  update: (id: string, data: Omit<Material, "id">) =>
     req<Material>(`/api/materials/${id}`, { method: "PUT", body: JSON.stringify(data) }),
-  remove: (id: number) =>
+  remove: (id: string) =>
     req<void>(`/api/materials/${id}`, { method: "DELETE" }),
 };
 

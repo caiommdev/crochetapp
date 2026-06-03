@@ -44,15 +44,25 @@ public class MaterialReservationService {
     private void deductStock(RecipeMaterialRequirement req, BigDecimal totalMeters) {
         var material = req.getMaterial();
         if (material instanceof Yarn yarn) {
-            int skeinsNeeded = totalMeters
-                    .divide(BigDecimal.valueOf(yarn.getMeters()), 0, RoundingMode.CEILING)
-                    .intValue();
-            if (yarn.getQuantity() < skeinsNeeded) {
-                throw new IllegalStateException(
-                        "Insufficient stock of '" + yarn.getName() + "'. Required: "
-                        + skeinsNeeded + " skein(s), available: " + yarn.getQuantity());
+            if (yarn.getMeters() != null && yarn.getMeters() > 0) {
+                int skeinsNeeded = totalMeters
+                        .divide(BigDecimal.valueOf(yarn.getMeters()), 0, RoundingMode.CEILING)
+                        .intValue();
+                if (yarn.getQuantity() < skeinsNeeded) {
+                    throw new IllegalStateException(
+                            "Insufficient stock of '" + yarn.getName() + "'. Required: "
+                            + skeinsNeeded + " skein(s), available: " + yarn.getQuantity());
+                }
+                yarn.setQuantity(yarn.getQuantity() - skeinsNeeded);
+            } else {
+                int needed = req.getQuantityNeeded();
+                if (yarn.getQuantity() < needed) {
+                    throw new IllegalStateException(
+                            "Insufficient stock of '" + yarn.getName() + "'. Required: "
+                            + needed + " unit(s), available: " + yarn.getQuantity());
+                }
+                yarn.setQuantity(yarn.getQuantity() - needed);
             }
-            yarn.setQuantity(yarn.getQuantity() - skeinsNeeded);
         } else if (material instanceof MeterAccessory meterAcc) {
             int metersNeeded = totalMeters.setScale(0, RoundingMode.CEILING).intValue();
             if (meterAcc.getMeters() < metersNeeded) {
@@ -74,10 +84,14 @@ public class MaterialReservationService {
     private void restoreStock(RecipeMaterialRequirement req, BigDecimal totalMeters) {
         var material = req.getMaterial();
         if (material instanceof Yarn yarn) {
-            int skeinsReturned = totalMeters
-                    .divide(BigDecimal.valueOf(yarn.getMeters()), 0, RoundingMode.FLOOR)
-                    .intValue();
-            yarn.setQuantity(yarn.getQuantity() + skeinsReturned);
+            if (yarn.getMeters() != null && yarn.getMeters() > 0) {
+                int skeinsReturned = totalMeters
+                        .divide(BigDecimal.valueOf(yarn.getMeters()), 0, RoundingMode.FLOOR)
+                        .intValue();
+                yarn.setQuantity(yarn.getQuantity() + skeinsReturned);
+            } else {
+                yarn.setQuantity(yarn.getQuantity() + req.getQuantityNeeded());
+            }
         } else if (material instanceof MeterAccessory meterAcc) {
             int metersReturned = totalMeters.setScale(0, RoundingMode.FLOOR).intValue();
             meterAcc.setMeters(meterAcc.getMeters() + metersReturned);

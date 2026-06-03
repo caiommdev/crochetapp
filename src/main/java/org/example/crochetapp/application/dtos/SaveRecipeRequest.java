@@ -9,6 +9,6 @@ public record SaveRecipeRequest(
         List<PointDto> points,
         List<MaterialRequirementDto> materialRequirements
 ) {
-    public record PointDto(String name, Integer centimetersPerPoint) {}
+    public record PointDto(String name, Integer centimetersPerPoint, Integer quantity) {}
     public record MaterialRequirementDto(UUID materialId, Integer quantityNeeded) {}
 }

@@ -123,7 +123,7 @@ export default function MaterialsPage() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     if (!confirm("Confirma a exclusão deste material?")) return;
     try {
       await materialsApi.remove(id);

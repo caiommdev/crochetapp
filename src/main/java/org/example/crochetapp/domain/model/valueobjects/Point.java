@@ -18,4 +18,5 @@ import lombok.ToString;
 public class Point {
     private String name;
     private Integer centimetersPerPoint;
+    private Integer quantity;
 }

@@ -58,7 +58,7 @@ export default function BudgetsPage() {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"form" | "quote">("form");
   const [productId, setProductId] = useState("");
-  const [selectedMaterialIds, setSelectedMaterialIds] = useState<(string | number)[]>([]);
+  const [selectedMaterialIds, setSelectedMaterialIds] = useState<string[]>([]);
   const [quote, setQuote] = useState<BudgetQuote | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export default function BudgetsPage() {
     setOpen(true);
   }
 
-  function toggleMaterial(id: string | number) {
+  function toggleMaterial(id: string) {
     setSelectedMaterialIds((prev) =>
       prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
     );

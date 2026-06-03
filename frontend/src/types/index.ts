@@ -6,6 +6,7 @@ export interface Image {
 export interface Point {
   name: string;
   centimetersPerPoint: number;
+  quantity: number;
 }
 
 export interface RecipeMaterialRequirement {
@@ -25,7 +26,7 @@ export interface Recipe {
 export type MaterialType = "YARN" | "ACCESSORY" | "METER_ACCESSORY";
 
 export interface Material {
-  id: number;
+  id: string;
   name: string;
   type: MaterialType;
   price: number;

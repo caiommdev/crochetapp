@@ -18,7 +18,6 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import {
   Table,
@@ -30,7 +29,7 @@ import {
 } from "@/components/ui/table";
 import { Pencil, Plus, Trash2 } from "lucide-react";
 
-type PointEntry = { key: string; value: string };
+type PointEntry = { key: string; value: string; quantity: string };
 type MaterialReqEntry = { materialId: string; quantityNeeded: string };
 type FormData = {
   name: string;
@@ -45,6 +44,8 @@ const EMPTY: FormData = {
   points: [],
   materialRequirements: [],
 };
+
+const EMPTY_POINT: PointEntry = { key: "", value: "0", quantity: "1" };
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -82,6 +83,7 @@ export default function RecipesPage() {
       points: r.points.map((p) => ({
         key: p.name,
         value: String(p.centimetersPerPoint),
+        quantity: String(p.quantity ?? 1),
       })),
       materialRequirements: r.materialRequirements.map((req) => ({
         materialId: String(req.material.id),
@@ -98,7 +100,7 @@ export default function RecipesPage() {
         description: form.description || undefined,
         points: form.points
           .filter((p) => p.key.trim())
-          .map((p) => ({ name: p.key, centimetersPerPoint: Number(p.value) })),
+          .map((p) => ({ name: p.key, centimetersPerPoint: Number(p.value), quantity: Number(p.quantity) || 1 })),
         materialRequirements: form.materialRequirements
           .filter((r) => r.materialId)
           .map((r) => ({
@@ -129,10 +131,10 @@ export default function RecipesPage() {
   }
 
   function addPoint() {
-    setForm((f) => ({ ...f, points: [...f.points, { key: "", value: "0" }] }));
+    setForm((f) => ({ ...f, points: [...f.points, { ...EMPTY_POINT }] }));
   }
 
-  function updatePoint(i: number, field: "key" | "value", val: string) {
+  function updatePoint(i: number, field: "key" | "value" | "quantity", val: string) {
     setForm((f) => {
       const points = [...f.points];
       points[i] = { ...points[i], [field]: val };
@@ -258,7 +260,7 @@ export default function RecipesPage() {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Pontos (tipo de ponto → cm/ponto)</Label>
+                <Label>Pontos (nome · cm/ponto · quantidade)</Label>
                 <Button size="sm" variant="outline" onClick={addPoint}>
                   <Plus className="h-3 w-3 mr-1" /> Adicionar
                 </Button>
@@ -271,11 +273,18 @@ export default function RecipesPage() {
                     onChange={(e) => updatePoint(i, "key", e.target.value)}
                   />
                   <Input
-                    placeholder="cm"
+                    placeholder="cm/ponto"
                     type="number"
                     value={p.value}
                     onChange={(e) => updatePoint(i, "value", e.target.value)}
                     className="w-24"
+                  />
+                  <Input
+                    placeholder="Qtd"
+                    type="number"
+                    value={p.quantity}
+                    onChange={(e) => updatePoint(i, "quantity", e.target.value)}
+                    className="w-20"
                   />
                   <Button
                     size="icon"
@@ -299,10 +308,14 @@ export default function RecipesPage() {
                 <div key={i} className="flex gap-2 items-center">
                   <Select
                     value={req.materialId}
-                    onValueChange={(v) => updateRequirement(i, "materialId", v)}
+                    onValueChange={(v) => v && updateRequirement(i, "materialId", v)}
                   >
                     <SelectTrigger className="flex-1">
-                      <SelectValue placeholder="Selecione o material" />
+                      <span className={`flex flex-1 text-left${!req.materialId ? " text-muted-foreground" : ""}`}>
+                        {req.materialId
+                          ? materials.find((m) => String(m.id) === req.materialId)?.name ?? "Selecione o material"
+                          : "Selecione o material"}
+                      </span>
                     </SelectTrigger>
                     <SelectContent>
                       {materials.map((m) => (

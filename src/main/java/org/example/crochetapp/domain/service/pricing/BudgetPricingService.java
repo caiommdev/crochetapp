@@ -38,13 +38,23 @@ public class BudgetPricingService {
 
     private BigDecimal calculateTotalCost(List<RecipeMaterialRequirement> requirements, BigDecimal totalMeters) {
         List<RecipeMaterialRequirement> meteredReqs = requirements.stream()
-                .filter(r -> r.getMaterial() instanceof Yarn || r.getMaterial() instanceof MeterAccessory)
+                .filter(r -> {
+                    if (r.getMaterial() instanceof Yarn yarn) {
+                        return yarn.getMeters() != null && yarn.getMeters() > 0;
+                    }
+                    return r.getMaterial() instanceof MeterAccessory;
+                })
                 .toList();
 
         BigDecimal meteredCost = calculateMeteredCost(meteredReqs, totalMeters);
 
         BigDecimal fixedCost = requirements.stream()
-                .filter(r -> !(r.getMaterial() instanceof Yarn) && !(r.getMaterial() instanceof MeterAccessory))
+                .filter(r -> {
+                    if (r.getMaterial() instanceof Yarn yarn) {
+                        return yarn.getMeters() == null || yarn.getMeters() == 0;
+                    }
+                    return !(r.getMaterial() instanceof MeterAccessory);
+                })
                 .map(r -> r.getMaterial().getPrice().multiply(BigDecimal.valueOf(r.getQuantityNeeded())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 

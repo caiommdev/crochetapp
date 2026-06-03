@@ -66,6 +66,7 @@ public class RecipeService {
                 .map(d -> Point.builder()
                         .name(d.name())
                         .centimetersPerPoint(d.centimetersPerPoint())
+                        .quantity(d.quantity())
                         .build())
                 .toList();
     }
