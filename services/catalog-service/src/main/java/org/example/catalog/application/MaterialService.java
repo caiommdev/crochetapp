@@ -35,13 +35,11 @@ public class MaterialService {
         return repository.findById(id).map(d -> mapper.toDto(d, stockClient.getById(id)));
     }
 
-    /** Retorna materiais por ids, preservando a ordem solicitada. */
     public List<MaterialDto> findByIds(List<UUID> ids) {
         Map<UUID, MaterialDto> map = findAsDtoMap(ids);
         return ids.stream().map(map::get).filter(java.util.Objects::nonNull).toList();
     }
 
-    /** Resolve uma coleção de ids em MaterialDto (definição + estoque). Usado por receitas/produtos. */
     public Map<UUID, MaterialDto> findAsDtoMap(Collection<UUID> ids) {
         if (ids == null || ids.isEmpty()) return Map.of();
         List<MaterialDefinition> defs = repository.findAllById(ids);

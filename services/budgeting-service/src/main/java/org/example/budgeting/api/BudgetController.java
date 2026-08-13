@@ -50,6 +50,6 @@ public class BudgetController {
     @PostMapping("/{id}/cancel")
     public ResponseEntity<Void> cancel(@PathVariable UUID id) {
         budgetService.cancelBudget(id);
-        return ResponseEntity.noContent().build(); // Pergunta burra, como o ResponseEntity funciona?
+        return ResponseEntity.noContent().build();
     }
 }

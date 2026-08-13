@@ -62,7 +62,6 @@ public class RecipeService {
         recipeRepository.deleteById(id);
     }
 
-    /** Monta o DTO resolvendo cada requisito (materialId) em MaterialDto (definição + estoque). */
     public RecipeDto toDto(Recipe recipe) {
         List<UUID> materialIds = recipe.getMaterialRequirements().stream()
                 .map(MaterialRequirement::getMaterialId)

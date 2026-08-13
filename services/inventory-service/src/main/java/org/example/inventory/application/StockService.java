@@ -30,7 +30,6 @@ public class StockService {
         return repository.findAllById(materialIds);
     }
 
-    /** Cria ou atualiza o estoque de um material (upsert por materialId). */
     public StockItem upsert(StockDto dto) {
         StockItem item = repository.findById(dto.materialId())
                 .orElseGet(() -> StockItem.builder().materialId(dto.materialId()).build());
@@ -43,10 +42,6 @@ public class StockService {
         repository.deleteById(materialId);
     }
 
-    /**
-     * Abate o estoque de todos os materiais do pedido de forma atômica (transação local).
-     * Se qualquer linha for insuficiente, toda a operação é revertida.
-     */
     @Transactional
     public void reserve(ReservationRequest request) {
         for (ReservationRequest.ReservationLine line : request.lines()) {
@@ -76,7 +71,6 @@ public class StockService {
         }
     }
 
-    /** Devolve ao estoque as quantidades previamente reservadas. */
     @Transactional
     public void release(ReservationRequest request) {
         for (ReservationRequest.ReservationLine line : request.lines()) {

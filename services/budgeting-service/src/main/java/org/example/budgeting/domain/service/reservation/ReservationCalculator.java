@@ -14,11 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Calcula, a partir da receita, quanto abater (reserva) ou devolver (liberação) de cada material.
- * O resultado são linhas prontas que o Inventory Service apenas aplica — mantendo o Inventory
- * como um "livro-razão" de estoque, sem conhecer receitas.
- */
 @Service
 public class ReservationCalculator {
 

@@ -8,13 +8,6 @@ import org.example.catalog.domain.valueobjects.Image;
 import java.math.BigDecimal;
 import java.util.UUID;
 
-/**
- * DEFINIÇÃO do material (identidade e características de catálogo). O NÍVEL DE ESTOQUE
- * (quantidade/metros) NÃO vive aqui — ele é dono do Inventory Service. Ver docs/BOUNDED-CONTEXTS.md.
- *
- * {@code metersPerSkein} corresponde ao antigo {@code Yarn.meters} (metros por novelo), que é uma
- * característica do produto (definição), não estoque.
- */
 @Getter
 @Setter
 @NoArgsConstructor

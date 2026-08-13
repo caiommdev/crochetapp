@@ -1,22 +1,17 @@
 package org.example.budgeting.infrastructure.client;
-
 import org.example.budgeting.application.dtos.ReservationRequest;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-/**
- * Cliente REST para o Inventory Service. Diferente do acesso ao Catalog, aqui as falhas
- * (ex.: estoque insuficiente -> 409) DEVEM se propagar para abortar o aceite do orçamento.
- */
 @Component
 public class InventoryClient {
 
     private final RestClient client;
 
-    public InventoryClient(RestClient.Builder builder,
-                           @Value("${inventory.url:http://localhost:8082}") String inventoryUrl) {
-        this.client = builder.baseUrl(inventoryUrl).build();
+    public InventoryClient(@LoadBalanced RestClient.Builder builder) {
+        this.client = builder.baseUrl("http://inventory-service").build();
     }
 
     public void reserve(ReservationRequest request) {

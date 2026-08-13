@@ -12,12 +12,6 @@ import lombok.Setter;
 
 import java.util.UUID;
 
-/**
- * Nível de estoque de um material. A identidade ({@code materialId}) é definida pelo
- * Catalog Service — aqui é apenas uma referência lógica por ID, sem foreign key entre bancos.
- * {@code quantity} = unidades/novelos; {@code meters} = metros disponíveis. Ambos podem ser nulos
- * conforme o tipo do material (fio/acessório/acessório por metro).
- */
 @Getter
 @Setter
 @NoArgsConstructor

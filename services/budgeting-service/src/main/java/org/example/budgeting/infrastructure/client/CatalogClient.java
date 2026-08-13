@@ -1,6 +1,6 @@
 package org.example.budgeting.infrastructure.client;
 
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -8,18 +8,13 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Cliente REST para o Catalog Service. Fornece a visão de produto/receita/materiais que o
- * Budgeting precisa para calcular viabilidade, preço e reserva.
- */
 @Component
 public class CatalogClient {
 
     private final RestClient client;
 
-    public CatalogClient(RestClient.Builder builder,
-                         @Value("${catalog.url:http://localhost:8081}") String catalogUrl) {
-        this.client = builder.baseUrl(catalogUrl).build();
+    public CatalogClient(@LoadBalanced RestClient.Builder builder) {
+        this.client = builder.baseUrl("http://catalog-service").build();
     }
 
     public ProductView getProduct(UUID productId) {

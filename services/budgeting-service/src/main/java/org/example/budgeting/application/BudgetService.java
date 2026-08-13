@@ -36,7 +36,7 @@ public class BudgetService {
     private final ReservationCalculator reservationCalculator;
 
     public List<BudgetDto> findAll() {
-        return budgetRepository.findAll().stream().map(this::toDto).toList(); // Pergunta burra, como o stream funciona?
+        return budgetRepository.findAll().stream().map(this::toDto).toList();
     }
 
     public Optional<BudgetDto> findById(UUID id) {
@@ -74,7 +74,7 @@ public class BudgetService {
 
         ProductView product = catalogClient.getProduct(budget.getProductId());
         ReservationRequest request = reservationCalculator.buildReserve(budget.getId(), product);
-        inventoryClient.reserve(request); // se estoque insuficiente, lança e o aceite é abortado
+        inventoryClient.reserve(request);
 
         budgetRepository.save(budget);
     }

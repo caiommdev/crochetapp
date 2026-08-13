@@ -16,6 +16,7 @@
       reforçando o princípio de que cada serviço faz build e evolui por conta própria.
     -->
     <modules>
+        <module>discovery-server</module>
         <module>services/catalog-service</module>
         <module>services/inventory-service</module>
         <module>services/budgeting-service</module>

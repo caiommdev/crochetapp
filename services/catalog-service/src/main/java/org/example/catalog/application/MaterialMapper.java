@@ -8,10 +8,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.UUID;
 
-/**
- * Faz a ponte entre a visão agregada (MaterialDto) e as duas fontes de verdade:
- * definição (Catalog) e estoque (Inventory). Concentra a regra de mapeamento por tipo.
- */
 @Component
 public class MaterialMapper {
 
@@ -31,7 +27,6 @@ public class MaterialMapper {
                 def.getImage(), def.getColor(), quantity, meters);
     }
 
-    /** Aplica os campos de DEFINIÇÃO do DTO na entidade (não toca estoque). */
     public void applyToDefinition(MaterialDto in, MaterialDefinition def) {
         def.setName(in.name());
         def.setPrice(in.price());
@@ -41,7 +36,6 @@ public class MaterialMapper {
         def.setMetersPerSkein(in.type() == org.example.catalog.domain.enums.MaterialType.YARN ? in.meters() : null);
     }
 
-    /** Extrai a parcela de ESTOQUE do DTO para enviar ao Inventory. */
     public StockWriteDto toStockWrite(UUID materialId, MaterialDto in) {
         Integer quantity = null;
         Integer meters = null;

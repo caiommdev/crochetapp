@@ -2,7 +2,7 @@ package org.example.catalog.infrastructure.client;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
@@ -13,13 +13,6 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-/**
- * Cliente REST para o Inventory Service. O Catalog agrega o estoque nas respostas de material.
- *
- * Resiliência (Fase 1): se o Inventory estiver indisponível, o Catalog degrada com elegância —
- * retorna a definição do material sem os dados de estoque, em vez de quebrar a requisição.
- * Na Fase 5 este acoplamento síncrono será substituído por um read-model replicado via eventos.
- */
 @Component
 public class StockClient {
 
@@ -27,9 +20,8 @@ public class StockClient {
 
     private final RestClient client;
 
-    public StockClient(RestClient.Builder builder,
-                       @Value("${inventory.url:http://localhost:8082}") String inventoryUrl) {
-        this.client = builder.baseUrl(inventoryUrl).build();
+    public StockClient(@LoadBalanced RestClient.Builder builder) {
+        this.client = builder.baseUrl("http://inventory-service").build();
     }
 
     public Map<UUID, StockView> getByIds(Collection<UUID> materialIds) {

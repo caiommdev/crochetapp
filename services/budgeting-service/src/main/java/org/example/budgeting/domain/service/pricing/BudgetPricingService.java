@@ -11,19 +11,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 
-/**
- * Regra de domínio (interna ao Budgeting): calcula o custo total e três faixas de lucro.
- * Usa um algoritmo de water-fill para distribuir os metros da receita entre os materiais
- * "metrados" (fios e acessórios por metro), respeitando a capacidade (estoque) de cada um.
- */
 @Service
 public class BudgetPricingService {
-    /*
-     * DUVIDA: essas regras nao deveria estar em uma classe do dominio, pelo o que entendo de orientacao a 
-               objetos, todos as regras de negocio que fazem respeito a uma classe, logo todos os seu 
-               comportamento, devem ficar centralizado nela 
-     * DUVIDA: O que é esse water-fill?
-    */
     public List<ProfitRange> calculateProfitRanges(ProductView product) {
         List<RequirementView> requirements = product.recipe().materialRequirements();
         List<PointView> recipePoints = product.recipe().points();
