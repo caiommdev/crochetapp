@@ -1,17 +1,169 @@
-version: '3.8'
 services:
-  postgres:
-    image: postgres:13
-    container_name: crochet_postgres
+
+  # ---------------- Bancos de dados (um por serviço) ----------------
+  catalog-db:
+    image: postgres:16
+    container_name: crochet_catalog_db
     restart: always
     ports:
-      - "5432:5432"
+      - "5433:5432"
     environment:
-      - POSTGRES_DB=crochetdb
+      - POSTGRES_DB=catalog_db
       - POSTGRES_USER=admin
       - POSTGRES_PASSWORD=admin
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - catalog_data:/var/lib/postgresql/data
+
+  inventory-db:
+    image: postgres:16
+    container_name: crochet_inventory_db
+    restart: always
+    ports:
+      - "5434:5432"
+    environment:
+      - POSTGRES_DB=inventory_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - inventory_data:/var/lib/postgresql/data
+
+  budgeting-db:
+    image: postgres:16
+    container_name: crochet_budgeting_db
+    restart: always
+    ports:
+      - "5435:5432"
+    environment:
+      - POSTGRES_DB=budgeting_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - budgeting_data:/var/lib/postgresql/data
+
+  auth-db:
+    image: postgres:16
+    container_name: crochet_auth_db
+    restart: always
+    ports:
+      - "5436:5432"
+    environment:
+      - POSTGRES_DB=auth_db
+      - POSTGRES_USER=admin
+      - POSTGRES_PASSWORD=admin
+    volumes:
+      - auth_data:/var/lib/postgresql/data
+
+  # ---------------- Microsserviços ----------------
+  discovery-server:
+    build:
+      context: .
+      dockerfile: discovery-server/Dockerfile
+    container_name: crochet_discovery
+    ports:
+      - "8761:8761"
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth-service/Dockerfile
+    container_name: crochet_auth_service
+    restart: on-failure
+    depends_on:
+      - auth-db
+      - discovery-server
+    ports:
+      - "8084:8084"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://auth-db:5432/auth_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - EUREKA_URL=http://discovery-server:8761/eureka/
+  
+  catalog-service:
+    build:
+      context: .
+      dockerfile: services/catalog-service/Dockerfile
+    container_name: crochet_catalog_service
+    restart: on-failure
+    depends_on:
+      - catalog-db
+      - inventory-service
+      - discovery-server
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://catalog-db:5432/catalog_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - EUREKA_URL=http://discovery-server:8761/eureka/
+
+  inventory-service:
+    build:
+      context: .
+      dockerfile: services/inventory-service/Dockerfile
+    container_name: crochet_inventory_service
+    restart: on-failure
+    depends_on:
+      - inventory-db
+      - discovery-server
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://inventory-db:5432/inventory_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - EUREKA_URL=http://discovery-server:8761/eureka/
+
+  budgeting-service:
+    build:
+      context: .
+      dockerfile: services/budgeting-service/Dockerfile
+    container_name: crochet_budgeting_service
+    restart: on-failure
+    depends_on:
+      - budgeting-db
+      - catalog-service
+      - inventory-service
+      - discovery-server
+    ports:
+      - "8083:8083"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://budgeting-db:5432/budgeting_db
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin
+      - EUREKA_URL=http://discovery-server:8761/eureka/
+
+  # ---------------- API Gateway (porta única de entrada) ----------------
+  api-gateway:
+    build:
+      context: .
+      dockerfile: gateway/api-gateway/Dockerfile
+    container_name: crochet_api_gateway
+    restart: on-failure
+    depends_on:
+      - catalog-service
+      - inventory-service
+      - budgeting-service
+      - discovery-server
+    ports:
+      - "8080:8080"
+    environment:
+      - EUREKA_URL=http://discovery-server:8761/eureka/
+
+  # ---------------- Frontend (Next.js) ----------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: crochet_frontend
+    restart: on-failure
+    depends_on:
+      - api-gateway
+    ports:
+      - "3000:3000"
 
 volumes:
-  postgres_data:
+  catalog_data:
+  inventory_data:
+  budgeting_data:
+  auth_data:

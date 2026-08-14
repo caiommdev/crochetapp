@@ -1,12 +1,35 @@
-import type { Budget, BudgetQuote, Material, Product, Recipe } from "@/types";
+import type {
+  Budget,
+  BudgetQuote,
+  LoginResponse,
+  Material,
+  Product,
+  Recipe,
+  RegisterInput,
+  UpdateUserInput,
+  User,
+} from "@/types";
+import { clearStoredToken, getStoredToken } from "@/lib/token";
 
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 async function req<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getStoredToken();
   const res = await fetch(`${BASE}${path}`, {
-    headers: { "Content-Type": "application/json" },
     ...init,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(init?.headers ?? {}),
+    },
   });
+  if (res.status === 401) {
+    clearStoredToken();
+    if (typeof window !== "undefined" && window.location.pathname !== "/login") {
+      window.location.href = "/login";
+    }
+    throw new Error("Sessão expirada. Faça login novamente.");
+  }
   if (!res.ok) {
     let message = `Erro na requisição: ${res.status}`;
     try {
@@ -66,4 +89,25 @@ export const budgetsApi = {
     req<void>(`/api/budgets/${id}/accept`, { method: "POST" }),
   cancel: (id: string) =>
     req<void>(`/api/budgets/${id}/cancel`, { method: "POST" }),
+};
+
+export const authApi = {
+  login: (username: string, password: string) =>
+    req<LoginResponse>("/api/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    }),
+  register: (data: RegisterInput) =>
+    req<User>("/api/auth/register", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+};
+
+export const usersApi = {
+  get: (id: string) => req<User>(`/api/users/${id}`),
+  update: (id: string, data: UpdateUserInput) =>
+    req<User>(`/api/users/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+  remove: (id: string) =>
+    req<void>(`/api/users/${id}`, { method: "DELETE" }),
 };
