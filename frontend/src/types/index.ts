@@ -67,3 +67,26 @@ export interface BudgetQuote {
   budget: Budget;
   profitRanges: ProfitRange[];
 }
+
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  image?: string;
+}
+
+export interface LoginResponse {
+  token: string;
+  tokenType: string;
+}
+
+export interface RegisterInput {
+  username: string;
+  email: string;
+  password: string;
+}
+
+export interface UpdateUserInput {
+  username: string;
+  email: string;
+}
