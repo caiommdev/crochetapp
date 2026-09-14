@@ -1,0 +1,71 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # ---- Rotas (lb:// = descobre via Eureka + balanceia) ----
+          routes:
+            # Catalog
+            - id: catalog-materials
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/materials/**
+            - id: catalog-recipes
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/recipes/**
+            - id: catalog-products
+              uri: lb://catalog-service
+              predicates:
+                - Path=/api/products/**
+            # Inventory
+            - id: inventory-stock
+              uri: lb://inventory-service
+              predicates:
+                - Path=/api/stock/**
+            # Budgeting
+            - id: budgeting-budgets
+              uri: lb://budgeting-service
+              predicates:
+                - Path=/api/budgets/**
+            # Auth
+            - id: auth
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/auth/**
+            - id: users
+              uri: lb://auth-service
+              predicates:
+                - Path=/api/users/**
+          # ---- CORS ----
+          globalcors:
+            cors-configurations:
+              '[/**]':
+                allowedOrigins: http://localhost:3000
+                allowedMethods:uito mais legível:
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                  - OPTIONS
+                allowedHeaders: "*"
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      # Registro no Eurekauito mais legível:
+      defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
+
+# JWT — MESMA chave secreta do auth-service (para validar a assinatura do token)
+jwt:
+  secret: ${JWT_SECRET:troque-esta-chave-por-uma-bem-longa-de-no-minimo-32-chars}
+
+gateway:
+  # Rotas públicas (não exigem token). Separadas por vírgula.
+  public-paths: ${GATEWAY_PUBLIC_PATHS:/api/auth}
+uito mais legível:uito mais legível:
