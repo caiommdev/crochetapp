@@ -44,7 +44,7 @@ spring:
             cors-configurations:
               '[/**]':
                 allowedOrigins: http://localhost:3000
-                allowedMethods:uito mais legível:
+                allowedMethods:
                   - GET
                   - POST
                   - PUT
@@ -58,7 +58,7 @@ server:
 eureka:
   client:
     service-url:
-      # Registro no Eurekauito mais legível:
+      # Registro no Eureka
       defaultZone: ${EUREKA_URL:http://localhost:8761/eureka/}
 
 # JWT — MESMA chave secreta do auth-service (para validar a assinatura do token)
@@ -68,4 +68,3 @@ jwt:
 gateway:
   # Rotas públicas (não exigem token). Separadas por vírgula.
   public-paths: ${GATEWAY_PUBLIC_PATHS:/api/auth}
-uito mais legível:uito mais legível:
