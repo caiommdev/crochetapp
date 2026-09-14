@@ -5,7 +5,7 @@ import org.example.auth.api.dtos.LoginResponse;
 import org.example.auth.api.dtos.RegisterRequest;
 import org.example.auth.api.dtos.UserResponse;
 import org.example.auth.domain.models.User;
-import org.example.auth.infrastructure.repositories.UserRepository;
+import org.example.auth.domain.repository.UserRepository;
 import org.example.auth.infrastructure.security.JwtService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;

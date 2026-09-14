@@ -15,7 +15,7 @@ import org.example.budgeting.infrastructure.client.CatalogClient;
 import org.example.budgeting.infrastructure.client.InventoryClient;
 import org.example.budgeting.infrastructure.client.MaterialView;
 import org.example.budgeting.infrastructure.client.ProductView;
-import org.example.budgeting.infrastructure.repositories.BudgetRepository;
+import org.example.budgeting.domain.repository.BudgetRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;

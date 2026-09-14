@@ -7,7 +7,7 @@ import java.util.Optional;
 import org.example.auth.api.dtos.UserResponse;
 import org.example.auth.api.dtos.UpdateUserRequest;
 import org.example.auth.domain.models.User;
-import org.example.auth.infrastructure.repositories.UserRepository;
+import org.example.auth.domain.repository.UserRepository;
 import java.util.UUID;
 
 @Service

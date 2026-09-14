@@ -6,7 +6,7 @@ import org.example.catalog.domain.model.MaterialDefinition;
 import org.example.catalog.infrastructure.client.StockClient;
 import org.example.catalog.infrastructure.client.StockView;
 import org.example.catalog.infrastructure.client.StockWriteDto;
-import org.example.catalog.infrastructure.repositories.MaterialDefinitionRepository;
+import org.example.catalog.domain.repository.MaterialDefinitionRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;

@@ -7,7 +7,7 @@ import org.example.catalog.api.dto.SaveRecipeRequest;
 import org.example.catalog.domain.model.Recipe;
 import org.example.catalog.domain.valueobjects.MaterialRequirement;
 import org.example.catalog.domain.valueobjects.Point;
-import org.example.catalog.infrastructure.repositories.RecipeRepository;
+import org.example.catalog.domain.repository.RecipeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,14 +64,14 @@ public class RecipeService {
 
     public RecipeDto toDto(Recipe recipe) {
         List<UUID> materialIds = recipe.getMaterialRequirements().stream()
-                .map(MaterialRequirement::getMaterialId)
+                .map(MaterialRequirement::materialId)
                 .toList();
         Map<UUID, MaterialDto> materials = materialService.findAsDtoMap(materialIds);
 
         List<RecipeDto.RequirementDto> requirements = recipe.getMaterialRequirements().stream()
                 .map(req -> new RecipeDto.RequirementDto(
-                        materials.get(req.getMaterialId()),
-                        req.getQuantityNeeded()))
+                        materials.get(req.materialId()),
+                        req.quantityNeeded()))
                 .toList();
 
         return new RecipeDto(
@@ -82,21 +82,14 @@ public class RecipeService {
     private List<Point> buildPoints(List<SaveRecipeRequest.PointDto> dtos) {
         if (dtos == null) return new ArrayList<>();
         return dtos.stream()
-                .map(d -> Point.builder()
-                        .name(d.name())
-                        .centimetersPerPoint(d.centimetersPerPoint())
-                        .quantity(d.quantity())
-                        .build())
+                .map(d -> new Point(d.name(), d.centimetersPerPoint(), d.quantity()))
                 .toList();
     }
 
     private List<MaterialRequirement> buildRequirements(List<SaveRecipeRequest.MaterialRequirementDto> dtos) {
         if (dtos == null) return new ArrayList<>();
         return dtos.stream()
-                .map(d -> MaterialRequirement.builder()
-                        .materialId(d.materialId())
-                        .quantityNeeded(d.quantityNeeded())
-                        .build())
+                .map(d -> new MaterialRequirement(d.materialId(), d.quantityNeeded()))
                 .toList();
     }
 }

@@ -5,8 +5,8 @@ import org.example.catalog.api.dto.ProductDto;
 import org.example.catalog.api.dto.SaveProductRequest;
 import org.example.catalog.domain.model.Product;
 import org.example.catalog.domain.model.Recipe;
-import org.example.catalog.infrastructure.repositories.ProductRepository;
-import org.example.catalog.infrastructure.repositories.RecipeRepository;
+import org.example.catalog.domain.repository.ProductRepository;
+import org.example.catalog.domain.repository.RecipeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.example.inventory.api.dto.ReservationRequest;
 import org.example.inventory.api.dto.StockDto;
 import org.example.inventory.domain.StockItem;
-import org.example.inventory.infrastructure.StockItemRepository;
+import org.example.inventory.domain.repository.StockItemRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
