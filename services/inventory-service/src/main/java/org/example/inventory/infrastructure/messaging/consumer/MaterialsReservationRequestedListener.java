@@ -6,7 +6,10 @@ import org.example.inventory.application.StockService;
 import org.example.inventory.domain.events.ReservationProcessed;
 import org.example.inventory.domain.shared.DomainEventPublisher;
 import org.example.inventory.infrastructure.messaging.events.MaterialsReservationRequested;
-import org.springframework.kafka.annotation.KafkaListener;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -18,11 +21,11 @@ public class MaterialsReservationRequestedListener {
     private final StockService stockService;
     private final DomainEventPublisher eventPublisher;
 
-    @KafkaListener(
-            topics = "${kafka.topic.reservation-requested}",
-            groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "materialsReservationRequestedContainerFactory"
-    )
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(name = "inventory.reservation-requested", durable = "true"),
+            exchange = @Exchange(name = "${rabbitmq.exchange.budgeting}", type = "topic", durable = "true"),
+            key = "reservation.requested"
+    ))
     public void handle(MaterialsReservationRequested event) {
         try {
             stockService.reserve(toReservationRequest(event));

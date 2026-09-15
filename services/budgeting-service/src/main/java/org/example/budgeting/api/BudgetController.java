@@ -52,4 +52,10 @@ public class BudgetController {
         budgetService.cancelBudget(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{id}/complete")
+    public ResponseEntity<Void> complete(@PathVariable UUID id) {
+        budgetService.completeBudget(id);
+        return ResponseEntity.noContent().build();
+    }
 }

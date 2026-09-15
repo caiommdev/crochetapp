@@ -45,7 +45,12 @@ export interface Product {
   image?: Image;
 }
 
-export type BudgetStatus = "IN_VALIDATION" | "IN_PROGRESS" | "CANCELED" | "DONE";
+export type BudgetStatus =
+  | "IN_VALIDATION"
+  | "RESERVING"
+  | "IN_PROGRESS"
+  | "CANCELED"
+  | "DONE";
 
 export interface Budget {
   id: string;

@@ -32,6 +32,7 @@ import { CheckCircle, Plus, Trash2, XCircle } from "lucide-react";
 
 const STATUS_LABELS: Record<BudgetStatus, string> = {
   IN_VALIDATION: "Em Validação",
+  RESERVING: "Reservando Estoque",
   IN_PROGRESS: "Em Andamento",
   CANCELED: "Cancelado",
   DONE: "Concluído",
@@ -42,6 +43,7 @@ const STATUS_VARIANTS: Record<
   "default" | "secondary" | "destructive" | "outline"
 > = {
   IN_VALIDATION: "secondary",
+  RESERVING: "secondary",
   IN_PROGRESS: "default",
   CANCELED: "destructive",
   DONE: "outline",
@@ -166,6 +168,21 @@ export default function BudgetsPage() {
     }
   }
 
+  async function handleComplete(id: string) {
+    if (
+      !confirm(
+        "Confirma a finalização? Os materiais reservados serão removidos do estoque permanentemente."
+      )
+    )
+      return;
+    try {
+      await budgetsApi.complete(id);
+      load();
+    } catch {
+      setError("Erro ao finalizar orçamento.");
+    }
+  }
+
   async function handleDelete(id: string) {
     if (!confirm("Confirma a exclusão deste orçamento?")) return;
     try {
@@ -241,7 +258,7 @@ export default function BudgetsPage() {
                     </Button>
                   </>
                 )}
-                {b.status === "IN_PROGRESS" && (
+                {b.status === "RESERVING" && (
                   <Button
                     size="icon"
                     variant="ghost"
@@ -250,6 +267,26 @@ export default function BudgetsPage() {
                   >
                     <XCircle className="h-4 w-4 text-red-500" />
                   </Button>
+                )}
+                {b.status === "IN_PROGRESS" && (
+                  <>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Finalizar orçamento"
+                      onClick={() => handleComplete(b.id)}
+                    >
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                    </Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      title="Cancelar orçamento"
+                      onClick={() => handleCancel(b.id)}
+                    >
+                      <XCircle className="h-4 w-4 text-red-500" />
+                    </Button>
+                  </>
                 )}
                 {(b.status === "CANCELED" || b.status === "DONE") && (
                   <Button
