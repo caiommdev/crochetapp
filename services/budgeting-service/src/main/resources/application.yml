@@ -15,14 +15,11 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
-  kafka:
-    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
-    consumer:
-      group-id: budgeting-service
-    producer:
-      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      properties:
-        spring.json.add.type.headers: false
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
@@ -31,18 +28,11 @@ spring:
 server:
   port: 8083
 
-kafka:
-  topic:
-    reservation-requested: reservation-requested
-    reservation-released: reservation-released
-    material-defined: material-defined
-    material-deleted: material-deleted
-    recipe-defined: recipe-defined
-    recipe-deleted: recipe-deleted
-    product-defined: product-defined
-    product-deleted: product-deleted
-    stock-level-changed: stock-level-changed
-    reservation-processed: reservation-processed
+rabbitmq:
+  exchange:
+    catalog: catalog.events
+    inventory: inventory.events
+    budgeting: budgeting.events
 
 eureka:
   client:

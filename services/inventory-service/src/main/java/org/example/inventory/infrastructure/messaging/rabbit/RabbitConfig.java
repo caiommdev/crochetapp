@@ -1,0 +1,22 @@
+package org.example.inventory.infrastructure.messaging.rabbit;
+
+import org.springframework.amqp.support.converter.JacksonJavaTypeMapper;
+import org.springframework.amqp.support.converter.JacksonJsonMessageConverter;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RabbitConfig {
+
+    /**
+     * TypePrecedence.INFERRED faz o Spring AMQP desserializar cada mensagem para o tipo do
+     * parâmetro do método @RabbitListener que a recebe, em vez de depender de um header
+     * __TypeId__ com o nome da classe de quem publicou (o que acoplaria os serviços).
+     */
+    @Bean
+    public JacksonJsonMessageConverter jacksonJsonMessageConverter() {
+        JacksonJsonMessageConverter converter = new JacksonJsonMessageConverter();
+        converter.setTypePrecedence(JacksonJavaTypeMapper.TypePrecedence.INFERRED);
+        return converter;
+    }
+}

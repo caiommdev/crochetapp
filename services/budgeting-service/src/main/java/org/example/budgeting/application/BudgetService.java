@@ -10,6 +10,7 @@ import org.example.budgeting.application.dtos.BudgetDto;
 import org.example.budgeting.application.dtos.BudgetQuote;
 import org.example.budgeting.application.dtos.ReservationRequest;
 import org.example.budgeting.domain.enums.BudgetStatus;
+import org.example.budgeting.domain.events.MaterialsConsumed;
 import org.example.budgeting.domain.events.MaterialsReleaseRequested;
 import org.example.budgeting.domain.events.MaterialsReservationRequested;
 import org.example.budgeting.domain.model.Budget;
@@ -94,6 +95,17 @@ public class BudgetService {
         budgetRepository.save(budget);
     }
 
+    public void completeBudget(UUID budgetId) {
+        Budget budget = budgetRepository.findById(budgetId)
+                .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
+        budget.complete();
+        budgetRepository.save(budget);
+
+        ProductView product = findProduct(budget.getProductId());
+        ReservationRequest request = reservationCalculator.buildReserve(budget.getId(), product);
+        eventPublisher.publish(List.of(new MaterialsConsumed(request.budgetId(), toConsumedLines(request))));
+    }
+
     public void cancelBudget(UUID budgetId) {
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
@@ -129,6 +141,12 @@ public class BudgetService {
     private List<MaterialsReleaseRequested.Line> toReleaseLines(ReservationRequest request) {
         return request.lines().stream()
                 .map(line -> new MaterialsReleaseRequested.Line(line.materialId(), line.quantity(), line.meters()))
+                .toList();
+    }
+
+    private List<MaterialsConsumed.Line> toConsumedLines(ReservationRequest request) {
+        return request.lines().stream()
+                .map(line -> new MaterialsConsumed.Line(line.materialId(), line.quantity(), line.meters()))
                 .toList();
     }
 }

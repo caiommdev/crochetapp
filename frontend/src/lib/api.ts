@@ -89,6 +89,8 @@ export const budgetsApi = {
     req<void>(`/api/budgets/${id}/accept`, { method: "POST" }),
   cancel: (id: string) =>
     req<void>(`/api/budgets/${id}/cancel`, { method: "POST" }),
+  complete: (id: string) =>
+    req<void>(`/api/budgets/${id}/complete`, { method: "POST" }),
 };
 
 export const authApi = {
