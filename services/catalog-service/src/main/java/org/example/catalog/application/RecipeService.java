@@ -4,10 +4,13 @@ import lombok.RequiredArgsConstructor;
 import org.example.catalog.api.dto.MaterialDto;
 import org.example.catalog.api.dto.RecipeDto;
 import org.example.catalog.api.dto.SaveRecipeRequest;
+import org.example.catalog.domain.events.RecipeDefined;
+import org.example.catalog.domain.events.RecipeDeleted;
 import org.example.catalog.domain.model.Recipe;
 import org.example.catalog.domain.valueobjects.MaterialRequirement;
 import org.example.catalog.domain.valueobjects.Point;
 import org.example.catalog.domain.repository.RecipeRepository;
+import org.example.catalog.domain.shared.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +26,7 @@ public class RecipeService {
 
     private final RecipeRepository recipeRepository;
     private final MaterialService materialService;
+    private final DomainEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<RecipeDto> findAll() {
@@ -42,7 +46,9 @@ public class RecipeService {
                 .points(buildPoints(request.points()))
                 .materialRequirements(buildRequirements(request.materialRequirements()))
                 .build();
-        return toDto(recipeRepository.save(recipe));
+        recipe = recipeRepository.save(recipe);
+        publishDefined(recipe);
+        return toDto(recipe);
     }
 
     @Transactional
@@ -54,12 +60,26 @@ public class RecipeService {
             existing.getPoints().addAll(buildPoints(request.points()));
             existing.getMaterialRequirements().clear();
             existing.getMaterialRequirements().addAll(buildRequirements(request.materialRequirements()));
-            return toDto(recipeRepository.save(existing));
+            Recipe saved = recipeRepository.save(existing);
+            publishDefined(saved);
+            return toDto(saved);
         });
     }
 
     public void deleteById(UUID id) {
         recipeRepository.deleteById(id);
+        eventPublisher.publish(List.of(new RecipeDeleted(id)));
+    }
+
+    private void publishDefined(Recipe recipe) {
+        List<RecipeDefined.PointItem> points = recipe.getPoints().stream()
+                .map(p -> new RecipeDefined.PointItem(p.name(), p.centimetersPerPoint(), p.quantity()))
+                .toList();
+        List<RecipeDefined.RequirementItem> requirements = recipe.getMaterialRequirements().stream()
+                .map(r -> new RecipeDefined.RequirementItem(r.materialId(), r.quantityNeeded()))
+                .toList();
+        eventPublisher.publish(List.of(new RecipeDefined(
+                recipe.getId(), recipe.getName(), recipe.getDescription(), points, requirements)));
     }
 
     public RecipeDto toDto(Recipe recipe) {

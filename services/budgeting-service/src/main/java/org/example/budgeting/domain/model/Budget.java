@@ -23,10 +23,22 @@ public class Budget {
 
     private BudgetStatus status;
 
-    public void confirm() {
+    public void startReserving() {
         if (this.status != BudgetStatus.IN_VALIDATION)
             throw new IllegalStateException("Budget is already in validation.");
+        this.status = BudgetStatus.RESERVING;
+    }
+
+    public void confirm() {
+        if (this.status != BudgetStatus.RESERVING)
+            throw new IllegalStateException("Budget is not waiting for reservation confirmation.");
         this.status = BudgetStatus.IN_PROGRESS;
+    }
+
+    public void failReservation() {
+        if (this.status != BudgetStatus.RESERVING)
+            throw new IllegalStateException("Budget is not waiting for reservation confirmation.");
+        this.status = BudgetStatus.CANCELED;
     }
 
     public void cancel() {

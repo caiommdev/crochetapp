@@ -1,17 +1,17 @@
 package org.example.catalog.application;
 
 import org.example.catalog.api.dto.MaterialDto;
+import org.example.catalog.domain.enums.MaterialType;
 import org.example.catalog.domain.model.MaterialDefinition;
-import org.example.catalog.infrastructure.client.StockView;
-import org.example.catalog.infrastructure.client.StockWriteDto;
+import org.example.catalog.infrastructure.cache.MaterialStockCache;
 import org.springframework.stereotype.Component;
-
-import java.util.UUID;
 
 @Component
 public class MaterialMapper {
 
-    public MaterialDto toDto(MaterialDefinition def, StockView stock) {
+    public record StockValues(Integer quantity, Integer meters) {}
+
+    public MaterialDto toDto(MaterialDefinition def, MaterialStockCache.StockLevel stock) {
         Integer quantity = null;
         Integer meters = null;
         switch (def.getType()) {
@@ -32,17 +32,17 @@ public class MaterialMapper {
         def.setPrice(in.price());
         def.setType(in.type());
         def.setImage(in.image());
-        def.setColor(in.type() == org.example.catalog.domain.enums.MaterialType.YARN ? in.color() : null);
-        def.setMetersPerSkein(in.type() == org.example.catalog.domain.enums.MaterialType.YARN ? in.meters() : null);
+        def.setColor(in.type() == MaterialType.YARN ? in.color() : null);
+        def.setMetersPerSkein(in.type() == MaterialType.YARN ? in.meters() : null);
     }
 
-    public StockWriteDto toStockWrite(UUID materialId, MaterialDto in) {
+    public StockValues resolveStock(MaterialDto in) {
         Integer quantity = null;
         Integer meters = null;
         switch (in.type()) {
             case YARN, ACCESSORY -> quantity = in.quantity();
             case METER_ACCESSORY -> meters = in.meters();
         }
-        return new StockWriteDto(materialId, quantity, meters);
+        return new StockValues(quantity, meters);
     }
 }

@@ -1,9 +1,8 @@
 package org.example.inventory.api;
 
 import lombok.RequiredArgsConstructor;
-import org.example.inventory.api.dto.ReservationRequest;
 import org.example.inventory.api.dto.StockDto;
-import org.example.inventory.domain.StockItem;
+import org.example.inventory.domain.model.StockItem;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -46,18 +45,6 @@ public class StockController {
     @DeleteMapping("/{materialId}")
     public ResponseEntity<Void> delete(@PathVariable UUID materialId) {
         stockService.deleteById(materialId);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/reserve")
-    public ResponseEntity<Void> reserve(@RequestBody ReservationRequest request) {
-        stockService.reserve(request);
-        return ResponseEntity.noContent().build();
-    }
-
-    @PostMapping("/release")
-    public ResponseEntity<Void> release(@RequestBody ReservationRequest request) {
-        stockService.release(request);
         return ResponseEntity.noContent().build();
     }
 }

@@ -1,7 +1,8 @@
 package org.example.inventory.infrastructure.persistence.repository.adapter;
 
 import lombok.RequiredArgsConstructor;
-import org.example.inventory.domain.StockItem;
+
+import org.example.inventory.domain.model.StockItem;
 import org.example.inventory.domain.repository.StockItemRepository;
 import org.example.inventory.infrastructure.persistence.mappers.StockItemMapper;
 import org.example.inventory.infrastructure.persistence.repository.jpa.StockItemJpaRepository;

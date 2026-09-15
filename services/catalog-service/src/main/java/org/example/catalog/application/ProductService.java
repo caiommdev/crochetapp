@@ -3,10 +3,13 @@ package org.example.catalog.application;
 import lombok.RequiredArgsConstructor;
 import org.example.catalog.api.dto.ProductDto;
 import org.example.catalog.api.dto.SaveProductRequest;
+import org.example.catalog.domain.events.ProductDefined;
+import org.example.catalog.domain.events.ProductDeleted;
 import org.example.catalog.domain.model.Product;
 import org.example.catalog.domain.model.Recipe;
 import org.example.catalog.domain.repository.ProductRepository;
 import org.example.catalog.domain.repository.RecipeRepository;
+import org.example.catalog.domain.shared.DomainEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ public class ProductService {
     private final ProductRepository productRepository;
     private final RecipeRepository recipeRepository;
     private final RecipeService recipeService;
+    private final DomainEventPublisher eventPublisher;
 
     @Transactional(readOnly = true)
     public List<ProductDto> findAll() {
@@ -40,7 +44,9 @@ public class ProductService {
                 .recipe(recipe)
                 .image(request.image())
                 .build();
-        return toDto(productRepository.save(product));
+        product = productRepository.save(product);
+        publishDefined(product);
+        return toDto(product);
     }
 
     @Transactional
@@ -49,12 +55,20 @@ public class ProductService {
             existing.setName(request.name());
             existing.setRecipe(resolveRecipe(request));
             existing.setImage(request.image());
-            return toDto(productRepository.save(existing));
+            Product saved = productRepository.save(existing);
+            publishDefined(saved);
+            return toDto(saved);
         });
     }
 
     public void deleteById(UUID id) {
         productRepository.deleteById(id);
+        eventPublisher.publish(List.of(new ProductDeleted(id)));
+    }
+
+    private void publishDefined(Product product) {
+        eventPublisher.publish(List.of(new ProductDefined(
+                product.getId(), product.getName(), product.getRecipe().getId())));
     }
 
     public ProductDto toDto(Product product) {

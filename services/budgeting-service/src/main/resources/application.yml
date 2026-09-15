@@ -15,15 +15,34 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
+    consumer:
+      group-id: budgeting-service
+    producer:
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        spring.json.add.type.headers: false
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
 
 server:
   port: 8083
 
-# URLs dos serviços colaboradores
-catalog:
-  url: ${CATALOG_URL:http://localhost:8081}
-inventory:
-  url: ${INVENTORY_URL:http://localhost:8082}
+kafka:
+  topic:
+    reservation-requested: reservation-requested
+    reservation-released: reservation-released
+    material-defined: material-defined
+    material-deleted: material-deleted
+    recipe-defined: recipe-defined
+    recipe-deleted: recipe-deleted
+    product-defined: product-defined
+    product-deleted: product-deleted
+    stock-level-changed: stock-level-changed
+    reservation-processed: reservation-processed
 
 eureka:
   client:

@@ -3,9 +3,11 @@ package org.example.inventory.application;
 import lombok.RequiredArgsConstructor;
 import org.example.inventory.api.dto.ReservationRequest;
 import org.example.inventory.api.dto.StockDto;
-import org.example.inventory.domain.StockItem;
+import org.example.inventory.domain.events.StockLevelChanged;
+import org.example.inventory.domain.model.StockItem;
 import org.example.inventory.domain.repository.StockItemRepository;
 import org.springframework.stereotype.Service;
+import org.example.inventory.domain.shared.DomainEventPublisher;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -17,6 +19,7 @@ import java.util.UUID;
 public class StockService {
 
     private final StockItemRepository repository;
+    private final DomainEventPublisher eventPublisher;
 
     public List<StockItem> findAll() {
         return repository.findAll();
@@ -35,7 +38,9 @@ public class StockService {
                 .orElseGet(() -> StockItem.builder().materialId(dto.materialId()).build());
         item.setQuantity(dto.quantity());
         item.setMeters(dto.meters());
-        return repository.save(item);
+        StockItem saved = repository.save(item);
+        eventPublisher.publish(List.of(new StockLevelChanged(saved.getMaterialId(), saved.getQuantity(), saved.getMeters())));
+        return saved;
     }
 
     public void deleteById(UUID materialId) {
@@ -44,30 +49,18 @@ public class StockService {
 
     @Transactional
     public void reserve(ReservationRequest request) {
-        for (ReservationRequest.ReservationLine line : request.lines()) {
-            StockItem item = repository.findById(line.materialId())
+        for (ReservationRequest.ReservationLine requestItem : request.lines()) {
+            StockItem item = repository.findById(requestItem.materialId())
                     .orElseThrow(() -> new IllegalStateException(
-                            "Estoque não encontrado para o material: " + line.materialId()));
+                            "Estoque não encontrado para o material: " + requestItem.materialId()));
 
-            if (line.quantity() != null && line.quantity() > 0) {
-                int current = item.getQuantity() == null ? 0 : item.getQuantity();
-                if (current < line.quantity()) {
-                    throw new IllegalStateException("Estoque insuficiente (unidades) para o material "
-                            + line.materialId() + ". Necessário: " + line.quantity() + ", disponível: " + current);
-                }
-                item.setQuantity(current - line.quantity());
-            }
-
-            if (line.meters() != null && line.meters() > 0) {
-                int current = item.getMeters() == null ? 0 : item.getMeters();
-                if (current < line.meters()) {
-                    throw new IllegalStateException("Estoque insuficiente (metros) para o material "
-                            + line.materialId() + ". Necessário: " + line.meters() + "m, disponível: " + current + "m");
-                }
-                item.setMeters(current - line.meters());
-            }
+            item.reserveItem(
+                    requestItem.quantity(),
+                    requestItem.meters()
+            );
 
             repository.save(item);
+            eventPublisher.publish(item.getEvents());
         }
     }
 
@@ -86,7 +79,8 @@ public class StockService {
                 int current = item.getMeters() == null ? 0 : item.getMeters();
                 item.setMeters(current + line.meters());
             }
-            repository.save(item);
+            StockItem saved = repository.save(item);
+            eventPublisher.publish(List.of(new StockLevelChanged(saved.getMaterialId(), saved.getQuantity(), saved.getMeters())));
         }
     }
 }

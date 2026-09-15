@@ -1,6 +1,6 @@
 package org.example.inventory.infrastructure.persistence.mappers;
 
-import org.example.inventory.domain.StockItem;
+import org.example.inventory.domain.model.StockItem;
 import org.example.inventory.infrastructure.persistence.entities.StockItemEntity;
 import org.springframework.stereotype.Component;
 

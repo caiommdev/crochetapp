@@ -1,8 +1,8 @@
 package org.example.budgeting.application.dtos;
 
 import org.example.budgeting.domain.enums.BudgetStatus;
-import org.example.budgeting.infrastructure.client.MaterialView;
-import org.example.budgeting.infrastructure.client.ProductView;
+import org.example.budgeting.infrastructure.cache.MaterialView;
+import org.example.budgeting.infrastructure.cache.ProductView;
 
 import java.util.List;
 import java.util.UUID;

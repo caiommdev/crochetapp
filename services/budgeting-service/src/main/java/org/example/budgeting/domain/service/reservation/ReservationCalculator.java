@@ -1,11 +1,11 @@
 package org.example.budgeting.domain.service.reservation;
 
 import org.example.budgeting.application.dtos.ReservationRequest;
-import org.example.budgeting.infrastructure.client.MaterialType;
-import org.example.budgeting.infrastructure.client.MaterialView;
-import org.example.budgeting.infrastructure.client.PointView;
-import org.example.budgeting.infrastructure.client.ProductView;
-import org.example.budgeting.infrastructure.client.RequirementView;
+import org.example.budgeting.infrastructure.cache.MaterialType;
+import org.example.budgeting.infrastructure.cache.MaterialView;
+import org.example.budgeting.infrastructure.cache.PointView;
+import org.example.budgeting.infrastructure.cache.ProductView;
+import org.example.budgeting.infrastructure.cache.RequirementView;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

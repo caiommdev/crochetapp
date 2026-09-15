@@ -1,7 +1,7 @@
 package org.example.budgeting.domain.service.feasibility;
 
-import org.example.budgeting.infrastructure.client.ProductView;
-import org.example.budgeting.infrastructure.client.RequirementView;
+import org.example.budgeting.infrastructure.cache.ProductView;
+import org.example.budgeting.infrastructure.cache.RequirementView;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;

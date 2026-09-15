@@ -1,10 +1,10 @@
 package org.example.inventory.domain.repository;
 
-import org.example.inventory.domain.StockItem;
-
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.example.inventory.domain.model.StockItem;
 
 public interface StockItemRepository {
 
