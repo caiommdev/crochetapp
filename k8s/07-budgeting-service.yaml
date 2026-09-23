@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: budgeting-service
+  namespace: crochetapp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: budgeting-service
+  template:
+    metadata:
+      labels:
+        app: budgeting-service
+    spec:
+      initContainers:
+        - name: wait-for-dependencies
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - >-
+              until nc -z budgeting-db 5432 && nc -z rabbitmq 5672 && nc -z redis 6379 && nc -z discovery-server 8761;
+              do echo "aguardando budgeting-db, rabbitmq, redis e discovery-server"; sleep 2; done
+      containers:
+        - name: budgeting-service
+          image: budgeting-service:1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8083
+          env:
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://budgeting-db:5432/budgeting_db
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: crochetapp-secrets
+                  key: POSTGRES_USER
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: crochetapp-secrets
+                  key: POSTGRES_PASSWORD
+            - name: EUREKA_URL
+              value: http://discovery-server:8761/eureka/
+            - name: RABBITMQ_HOST
+              value: rabbitmq
+            - name: RABBITMQ_PORT
+              value: "5672"
+            - name: RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: crochetapp-secrets
+                  key: RABBITMQ_USERNAME
+            - name: RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: crochetapp-secrets
+                  key: RABBITMQ_PASSWORD
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "6379"
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 20
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 40
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: budgeting-service
+  namespace: crochetapp
+spec:
+  selector:
+    app: budgeting-service
+  ports:
+    - port: 8083
+      targetPort: 8083

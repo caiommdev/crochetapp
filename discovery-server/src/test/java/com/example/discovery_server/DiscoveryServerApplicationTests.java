@@ -1,8 +1,8 @@
 package com.example.discovery_server;
 
+import org.example.discovery_server.DiscoveryServerApplication;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.example.discovery_server.DiscoveryServerApplication;
 
 @SpringBootTest(classes = DiscoveryServerApplication.class)
 class DiscoveryServerApplicationTests {
