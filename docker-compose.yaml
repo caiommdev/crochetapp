@@ -1,5 +1,74 @@
 services:
 
+  # ---------------- Observabilidade ----------------
+  graylog-mongo:
+    image: mongo:6.0
+    container_name: crochet_graylog_mongo
+    restart: always
+
+  graylog-opensearch:
+    image: opensearchproject/opensearch:2.11.1
+    container_name: crochet_graylog_opensearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - plugins.security.disabled=true
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+
+  graylog:
+    image: graylog/graylog:5.2
+    container_name: crochet_graylog
+    restart: always
+    depends_on:
+      - graylog-mongo
+      - graylog-opensearch
+    ports:
+      - "9000:9000"
+      - "12201:12201/udp"
+    environment:
+      - GRAYLOG_PASSWORD_SECRET=troque-este-secret-por-uma-string-bem-grande
+      - GRAYLOG_ROOT_PASSWORD_SHA2=8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918
+      - GRAYLOG_HTTP_EXTERNAL_URI=http://127.0.0.1:9000/
+      - GRAYLOG_MONGODB_URI=mongodb://graylog-mongo:27017/graylog
+      - GRAYLOG_ELASTICSEARCH_HOSTS=http://graylog-opensearch:9200
+
+  temporal-postgres:
+    image: postgres:16
+    container_name: crochet_temporal_postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=temporal
+      - POSTGRES_USER=temporal
+      - POSTGRES_PASSWORD=temporal
+    ports:
+      - "5437:5432"
+
+  temporal:
+    image: temporalio/auto-setup:1.25.2
+    container_name: crochet_temporal
+    restart: always
+    depends_on:
+      - temporal-postgres
+    environment:
+      - DB=postgres12
+      - DB_PORT=5432
+      - POSTGRES_SEEDS=temporal-postgres
+      - POSTGRES_USER=temporal
+      - POSTGRES_PWD=temporal
+    ports:
+      - "7233:7233"
+
+  temporal-ui:
+    image: temporalio/ui:2.30.2
+    container_name: crochet_temporal_ui
+    restart: always
+    depends_on:
+      - temporal
+    environment:
+      - TEMPORAL_ADDRESS=temporal:7233
+    ports:
+      - "8233:8080"
+
   # ---------------- Bancos de dados (um por serviço) ----------------
   catalog-db:
     image: postgres:16
@@ -81,6 +150,11 @@ services:
     container_name: crochet_discovery
     ports:
       - "8761:8761"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-discovery-server"
 
   auth-service:
     build:
@@ -98,6 +172,12 @@ services:
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin
       - EUREKA_URL=http://discovery-server:8761/eureka/
+      - TEMPORAL_ADDRESS=temporal:7233
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-auth-service"
   
   catalog-service:
     build:
@@ -123,6 +203,12 @@ services:
       - RABBITMQ_PASSWORD=guest
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - TEMPORAL_ADDRESS=temporal:7233
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-catalog-service"
 
   inventory-service:
     build:
@@ -145,6 +231,12 @@ services:
       - RABBITMQ_PORT=5672
       - RABBITMQ_USERNAME=guest
       - RABBITMQ_PASSWORD=guest
+      - TEMPORAL_ADDRESS=temporal:7233
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-inventory-service"
 
   budgeting-service:
     build:
@@ -170,6 +262,12 @@ services:
       - RABBITMQ_PASSWORD=guest
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - TEMPORAL_ADDRESS=temporal:7233
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-budgeting-service"
 
   # ---------------- API Gateway (porta única de entrada) ----------------
   api-gateway:
@@ -187,6 +285,12 @@ services:
       - "8080:8080"
     environment:
       - EUREKA_URL=http://discovery-server:8761/eureka/
+      - TEMPORAL_ADDRESS=temporal:7233
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-api-gateway"
 
   # ---------------- Frontend (Next.js) ----------------
   frontend:
@@ -199,6 +303,11 @@ services:
       - api-gateway
     ports:
       - "3000:3000"
+    logging:
+      driver: gelf
+      options:
+        gelf-address: "udp://localhost:12201"
+        tag: "crochetapp-frontend"
 
 volumes:
   catalog_data:

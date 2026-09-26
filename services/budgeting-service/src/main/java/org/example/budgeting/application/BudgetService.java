@@ -25,6 +25,8 @@ import org.example.budgeting.infrastructure.cache.MaterialReadModelStore;
 import org.example.budgeting.infrastructure.cache.MaterialView;
 import org.example.budgeting.infrastructure.cache.ProductReadModelStore;
 import org.example.budgeting.infrastructure.cache.ProductView;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -32,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class BudgetService {
+
+    private static final Logger log = LoggerFactory.getLogger(BudgetService.class);
 
     private final BudgetRepository budgetRepository;
     private final ProductReadModelStore productReadModelStore;
@@ -54,10 +58,12 @@ public class BudgetService {
     }
 
     public BudgetQuote createQuote(UUID productId, List<UUID> materialIds) {
+        log.info("Criando cotação de orçamento productId={} materialCount={}", productId, materialIds.size());
         ProductView product = findProduct(productId);
 
         FeasibilityResult feasibility = feasibilityService.checkFeasibility(product, materialIds);
         if (!feasibility.feasible()) {
+            log.warn("Cotação inviável para productId={} motivo={}", productId, feasibility.reason());
             throw new IllegalStateException("Orçamento inviável: " + feasibility.reason());
         }
 
@@ -69,11 +75,13 @@ public class BudgetService {
                 .status(BudgetStatus.IN_VALIDATION)
                 .build();
         budget = budgetRepository.save(budget);
+        log.info("Cotação criada com sucesso budgetId={} productId={}", budget.getId(), productId);
 
         return new BudgetQuote(toDto(budget), ranges);
     }
 
     public void acceptBudget(UUID budgetId) {
+        log.info("Iniciando reserva de materiais para budgetId={}", budgetId);
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
         budget.startReserving();
@@ -82,9 +90,11 @@ public class BudgetService {
         ProductView product = findProduct(budget.getProductId());
         ReservationRequest request = reservationCalculator.buildReserve(budget.getId(), product);
         eventPublisher.publish(List.of(new MaterialsReservationRequested(request.budgetId(), toLines(request))));
+        log.info("Evento de reserva publicado budgetId={} lineCount={}", budgetId, request.lines().size());
     }
 
     public void applyReservationResult(UUID budgetId, boolean success, String reason) {
+        log.info("Aplicando resultado da reserva budgetId={} success={} reason={}", budgetId, success, reason);
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
         if (success) {
@@ -93,9 +103,11 @@ public class BudgetService {
             budget.failReservation();
         }
         budgetRepository.save(budget);
+        log.info("Status do orçamento atualizado budgetId={} status={}", budgetId, budget.getStatus());
     }
 
     public void completeBudget(UUID budgetId) {
+        log.info("Concluindo orçamento budgetId={}", budgetId);
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
         budget.complete();
@@ -104,9 +116,11 @@ public class BudgetService {
         ProductView product = findProduct(budget.getProductId());
         ReservationRequest request = reservationCalculator.buildReserve(budget.getId(), product);
         eventPublisher.publish(List.of(new MaterialsConsumed(request.budgetId(), toConsumedLines(request))));
+        log.info("Evento de consumo publicado budgetId={} lineCount={}", budgetId, request.lines().size());
     }
 
     public void cancelBudget(UUID budgetId) {
+        log.info("Cancelando orçamento budgetId={}", budgetId);
         Budget budget = budgetRepository.findById(budgetId)
                 .orElseThrow(() -> new IllegalArgumentException("Orçamento não encontrado"));
         boolean hadReservation = budget.getStatus() == BudgetStatus.IN_PROGRESS
@@ -118,6 +132,7 @@ public class BudgetService {
             ProductView product = findProduct(budget.getProductId());
             ReservationRequest request = reservationCalculator.buildRelease(budget.getId(), product);
             eventPublisher.publish(List.of(new MaterialsReleaseRequested(request.budgetId(), toReleaseLines(request))));
+            log.info("Evento de liberação publicado budgetId={} lineCount={}", budgetId, request.lines().size());
         }
     }
 

@@ -6,6 +6,10 @@ import org.example.inventory.application.StockService;
 import org.example.inventory.domain.events.ReservationProcessed;
 import org.example.inventory.domain.shared.DomainEventPublisher;
 import org.example.inventory.infrastructure.messaging.events.MaterialsReservationRequested;
+import org.example.inventory.infrastructure.observability.CorrelationContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -18,6 +22,8 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MaterialsReservationRequestedListener {
 
+    private static final Logger log = LoggerFactory.getLogger(MaterialsReservationRequestedListener.class);
+
     private final StockService stockService;
     private final DomainEventPublisher eventPublisher;
 
@@ -26,13 +32,18 @@ public class MaterialsReservationRequestedListener {
             exchange = @Exchange(name = "${rabbitmq.exchange.budgeting}", type = "topic", durable = "true"),
             key = "reservation.requested"
     ))
-    public void handle(MaterialsReservationRequested event) {
-        try {
-            stockService.reserve(toReservationRequest(event));
-            eventPublisher.publish(List.of(new ReservationProcessed(event.budgetId(), true, null)));
-        } catch (IllegalStateException e) {
-            eventPublisher.publish(List.of(new ReservationProcessed(event.budgetId(), false, e.getMessage())));
-        }
+    public void handle(MaterialsReservationRequested event, Message message) {
+        CorrelationContext.withMessage(message, () -> {
+            log.info("Evento reservation.requested recebido budgetId={} lineCount={}", event.budgetId(), event.lines().size());
+            try {
+                stockService.reserve(toReservationRequest(event));
+                eventPublisher.publish(List.of(new ReservationProcessed(event.budgetId(), true, null)));
+                log.info("Reserva de materiais concluída budgetId={}", event.budgetId());
+            } catch (IllegalStateException e) {
+                log.warn("Reserva de materiais falhou budgetId={} reason={}", event.budgetId(), e.getMessage());
+                eventPublisher.publish(List.of(new ReservationProcessed(event.budgetId(), false, e.getMessage())));
+            }
+        });
     }
 
     private ReservationRequest toReservationRequest(MaterialsReservationRequested event) {

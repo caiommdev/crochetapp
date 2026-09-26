@@ -68,3 +68,7 @@ jwt:
 gateway:
   # Rotas públicas (não exigem token). Separadas por vírgula.
   public-paths: ${GATEWAY_PUBLIC_PATHS:/api/auth}
+
+logging:
+  pattern:
+    level: "%5p [traceId=%X{traceId} requestId=%X{requestId}]"

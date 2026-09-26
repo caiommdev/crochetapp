@@ -1,28 +1,33 @@
 package org.example.catalog.application;
 
-import lombok.RequiredArgsConstructor;
-import org.example.catalog.api.dto.MaterialDto;
-import org.example.catalog.api.dto.RecipeDto;
-import org.example.catalog.api.dto.SaveRecipeRequest;
-import org.example.catalog.domain.events.RecipeDefined;
-import org.example.catalog.domain.events.RecipeDeleted;
-import org.example.catalog.domain.model.Recipe;
-import org.example.catalog.domain.valueobjects.MaterialRequirement;
-import org.example.catalog.domain.valueobjects.Point;
-import org.example.catalog.domain.repository.RecipeRepository;
-import org.example.catalog.domain.shared.DomainEventPublisher;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.example.catalog.api.dto.MaterialDto;
+import org.example.catalog.api.dto.RecipeDto;
+import org.example.catalog.api.dto.SaveRecipeRequest;
+import org.example.catalog.domain.events.RecipeDefined;
+import org.example.catalog.domain.events.RecipeDeleted;
+import org.example.catalog.domain.model.Recipe;
+import org.example.catalog.domain.repository.RecipeRepository;
+import org.example.catalog.domain.shared.DomainEventPublisher;
+import org.example.catalog.domain.valueobjects.MaterialRequirement;
+import org.example.catalog.domain.valueobjects.Point;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import lombok.RequiredArgsConstructor;
+
 @Service
 @RequiredArgsConstructor
 public class RecipeService {
+
+    private static final Logger log = LoggerFactory.getLogger(RecipeService.class);
 
     private final RecipeRepository recipeRepository;
     private final MaterialService materialService;
@@ -40,6 +45,10 @@ public class RecipeService {
 
     @Transactional
     public RecipeDto save(SaveRecipeRequest request) {
+        log.info("Criando receita name={} pointCount={} requirementCount={}",
+            request.name(),
+            request.points() == null ? 0 : request.points().size(),
+            request.materialRequirements() == null ? 0 : request.materialRequirements().size());
         Recipe recipe = Recipe.builder()
                 .name(request.name())
                 .description(request.description())
@@ -48,11 +57,13 @@ public class RecipeService {
                 .build();
         recipe = recipeRepository.save(recipe);
         publishDefined(recipe);
+        log.info("Receita criada recipeId={} name={}", recipe.getId(), recipe.getName());
         return toDto(recipe);
     }
 
     @Transactional
     public Optional<RecipeDto> update(UUID id, SaveRecipeRequest request) {
+        log.info("Atualizando receita recipeId={}", id);
         return recipeRepository.findById(id).map(existing -> {
             existing.setName(request.name());
             existing.setDescription(request.description());
@@ -62,13 +73,16 @@ public class RecipeService {
             existing.getMaterialRequirements().addAll(buildRequirements(request.materialRequirements()));
             Recipe saved = recipeRepository.save(existing);
             publishDefined(saved);
+            log.info("Receita atualizada recipeId={} name={}", saved.getId(), saved.getName());
             return toDto(saved);
         });
     }
 
     public void deleteById(UUID id) {
+        log.info("Removendo receita recipeId={}", id);
         recipeRepository.deleteById(id);
         eventPublisher.publish(List.of(new RecipeDeleted(id)));
+        log.info("Receita removida recipeId={}", id);
     }
 
     private void publishDefined(Recipe recipe) {
